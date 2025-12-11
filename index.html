@@ -1,629 +1,258 @@
-<!DOCTYPE html>
-<html lang="ja">
+@"<!DOCTYPE html>
+<html lang=""ja"">
 <head>
-  <meta charset="UTF-8">
+  <meta charset=""UTF-8"">
+  <meta http-equiv=""X-UA-Compatible"" content=""IE=edge"">
   <title>メニュー</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #fff;
-    }
-
-    /* 上部タイトルバー */
-    .app-bar {
-      height: 50px;
-      border-bottom: 1px solid #e0e0e0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      font-size: 20px;
-      font-weight: 600;
-    }
-    .app-bar-icon {
-      position: absolute;
-      right: 16px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid #36a2dc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-    .app-bar-icon span {
-      font-size: 18px;
-      color: #36a2dc;
-    }
-
-    /* 言語メニュー */
-    .language-menu {
-      position: absolute;
-      top: 52px;
-      right: 16px;
-      min-width: 160px;
-      background: #ffffff;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      padding: 8px 0;
-      display: none;
-      z-index: 200;
-    }
-    .language-menu.open {
-      display: block;
-    }
-    .language-menu li {
-      list-style: none;
-      padding: 8px 16px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .language-menu li:hover {
-      background: #f2f4f6;
-    }
-    .language-menu li.selected {
-      font-weight: 600;
-      color: #36a2dc;
-    }
-
-    /* ===== メニュー画面 ===== */
-    .tabs {
-      display: flex;
-      overflow-x: auto;
-      white-space: nowrap;
-      border-bottom: 1px solid #e0e0e0;
-      scrollbar-width: none;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, ""Segoe UI"", sans-serif; margin: 0; padding: 0; background: #fff; }
+    /* (スタイルはIE11でも概ね動作するためそのまま) */
+    .app-bar { height: 50px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: center; position: relative; font-size: 20px; font-weight: 600; }
+    .app-bar-icon { position: absolute; right: 16px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid #36a2dc; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .app-bar-icon span { font-size: 18px; color: #36a2dc; }
+    .language-menu { position: absolute; top: 52px; right: 16px; min-width: 160px; background: #ffffff; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 8px 0; display: none; z-index: 200; }
+    .language-menu.open { display: block; }
+    .language-menu li { list-style: none; padding: 8px 16px; cursor: pointer; white-space: nowrap; }
+    .language-menu li:hover { background: #f2f4f6; }
+    .language-menu li.selected { font-weight: 600; color: #36a2dc; }
+    .tabs { display: flex; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #e0e0e0; -ms-overflow-style: none; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-
-    .tab {
-      flex: 0 0 calc(100% / 3);  /* 最初3項目だけ見える */
-      text-align: center;
-      padding: 10px 14px;
-      font-size: 16px;
-      color: #777;
-      cursor: pointer;
-      position: relative;
-      box-sizing: border-box;
-    }
-    .tab.active {
-      color: #0088cc;
-      font-weight: 600;
-    }
-    .tab.active::after {
-      content: "";
-      position: absolute;
-      left: 20%;
-      right: 20%;
-      bottom: 0;
-      height: 3px;
-      background: #0088cc;
-      border-radius: 2px;
-    }
-
-    .content {
-      padding: 15px;
-      font-size: 18px;
-    }
-    .content-section {
-      display: none;
-    }
-    .content-section.active {
-      display: block;
-    }
-
-    .menu-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 18px;
-      cursor: pointer;
-    }
-    .menu-thumb {
-      width: 60px;
-      height: 60px;
-      background: #d8d8d8;
-      border-radius: 6px;
-      margin-right: 16px;
-      overflow: hidden;
-    }
-    .menu-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: inherit;
-      display: block;
-    }
-
-    /* ===== 共通 ===== */
-    .hidden {
-      display: none;
-    }
-
-    /* ===== AR画面 ===== */
-    .ar-screen {
-      position: relative;
-      height: calc(100vh - 50px);  /* タイトルバー分を引く */
-      background: #000;
-      overflow: hidden;
-    }
-    .ar-bg-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .ar-controls {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 16px;
-      padding: 0 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      pointer-events: none;
-    }
-    .back-btn,
-    .option-btn {
-      pointer-events: auto;
-      border: none;
-      outline: none;
-      cursor: pointer;
-      font-size: 14px;
-      display: inline-flex;
-      align-items: center;
-    }
-    .back-btn {
-      background: #ffffff;
-      border-radius: 999px;
-      padding: 8px 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .option-btn {
-      background: #006d80;
-      color: #ffffff;
-      border-radius: 999px;
-      padding: 10px 18px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      gap: 6px;
-    }
-
-    .size-menu {
-      position: absolute;
-      left: 50%;
-      bottom: 96px;
-      transform: translateX(-50%);
-      min-width: 140px;
-      background: #f4f7f9;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      padding: 10px 0;
-      display: none;
-    }
-    .size-menu.open {
-      display: block;
-    }
-    .size-item {
-      padding: 6px 16px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .size-item:hover {
-      background: #e2e6ea;
-    }
-    .size-item.selected {
-      font-weight: 600;
-      background: #d4e9ff;
-    }
+    .tab { flex: 0 0 calc(100% / 3); text-align: center; padding: 10px 14px; font-size: 16px; color: #777; cursor: pointer; position: relative; box-sizing: border-box; }
+    .tab.active { color: #0088cc; font-weight: 600; }
+    .tab.active::after { content: """"; position: absolute; left: 20%; right: 20%; bottom: 0; height: 3px; background: #0088cc; border-radius: 2px; }
+    .content { padding: 15px; font-size: 18px; }
+    .content-section { display: none; }
+    .content-section.active { display: block; }
+    .menu-item { display: flex; align-items: center; margin-bottom: 18px; cursor: pointer; }
+    .menu-thumb { width: 60px; height: 60px; background: #d8d8d8; border-radius: 6px; margin-right: 16px; overflow: hidden; flex-shrink: 0; }
+    .menu-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+    .hidden { display: none; }
+    .ar-screen { position: relative; height: calc(100vh - 50px); background: #000; overflow: hidden; }
+    .ar-bg-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ar-controls { position: absolute; left: 0; right: 0; bottom: 16px; padding: 0 16px; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; }
+    .back-btn, .option-btn { pointer-events: auto; border: none; outline: none; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; }
+    .back-btn { background: #ffffff; border-radius: 999px; padding: 8px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .option-btn { background: #006d80; color: #ffffff; border-radius: 999px; padding: 10px 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); gap: 6px; }
+    .size-menu { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); min-width: 140px; background: #f4f7f9; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); padding: 10px 0; display: none; }
+    .size-menu.open { display: block; }
+    .size-item { padding: 6px 16px; font-size: 16px; cursor: pointer; }
+    .size-item:hover { background: #e2e6ea; }
+    .size-item.selected { font-weight: 600; background: #d4e9ff; }
   </style>
 </head>
-
 <body>
-
-  <!-- 共通タイトルバー -->
-  <div class="app-bar">
-    <span id="title">メニュー</span>
-    <div class="app-bar-icon" id="langButton"><span>🌐</span></div>
-
-    <div class="language-menu" id="languageMenu">
+  <div class=""app-bar"">
+    <span id=""title"">メニュー</span>
+    <div class=""app-bar-icon"" id=""langButton""><span>🌐</span></div>
+    <div class=""language-menu"" id=""languageMenu"">
       <ul>
-        <li data-lang="ja" class="selected">日本語</li>
-        <li data-lang="en">English</li>
-        <li data-lang="ko">한국어</li>
-        <li data-lang="zh">中文</li>
-        <li data-lang="fr">Français</li>
-        <li data-lang="es">Español</li>
-        <li data-lang="de">Deutsch</li>
-        <li data-lang="it">Italiano</li>
+        <li data-lang=""ja"" class=""selected"">日本語</li>
+        <li data-lang=""en"">English</li>
+        <li data-lang=""ko"">한국어</li>
+        <li data-lang=""zh"">中文</li>
+        <li data-lang=""fr"">Français</li>
+        <li data-lang=""es"">Español</li>
+        <li data-lang=""de"">Deutsch</li>
+        <li data-lang=""it"">Italiano</li>
       </ul>
     </div>
   </div>
 
-  <!-- ===== メニュー画面 ===== -->
-  <div id="menuScreen">
-    <!-- タブ -->
-    <div class="tabs">
-      <div class="tab active" data-target="cat1" id="tab1">麺・ごはん</div>
-      <div class="tab" data-target="cat2" id="tab2">焼き・揚げもの</div>
-      <div class="tab" data-target="cat3" id="tab3">鍋・汁物</div>
-      <div class="tab" data-target="cat4" id="tab4">デザート</div>
-      <div class="tab" data-target="cat5" id="tab5">飲み物</div>
+  <div id=""menuScreen"">
+    <div class=""tabs"">
+      <div class=""tab active"" data-target=""cat1"" id=""tab1"">麺・ごはん</div>
+      <div class=""tab"" data-target=""cat2"" id=""tab2"">焼き・揚げもの</div>
+      <div class=""tab"" data-target=""cat3"" id=""tab3"">鍋・汁物</div>
+      <div class=""tab"" data-target=""cat4"" id=""tab4"">デザート</div>
+      <div class=""tab"" data-target=""cat5"" id=""tab5"">飲み物</div>
     </div>
-
-    <!-- メニュー内容 -->
-    <div class="content">
-      <!-- 麺・ごはん -->
-      <div class="content-section active" id="cat1">
-        <div class="menu-item" data-ar="Ramen.png">
-          <div class="menu-thumb">
-            <img src="Ramen1.png" alt="ラーメン">
-          </div>
-          <div id="c1-0">ラーメン</div>
-        </div>
-        <div class="menu-item" data-ar="Fried rice.png">
-          <div class="menu-thumb">
-            <img src="Fried rice1.png" alt="チャーハン">
-          </div>
-          <div id="c1-1">チャーハン</div>
-        </div>
-        <div class="menu-item" data-ar="Shanghai fried noodles.png">
-          <div class="menu-thumb">
-            <img src="Shanghai fried noodles1.png" alt="上海焼きそば">
-          </div>
-          <div id="c1-2">上海焼きそば</div>
-        </div>
+    <div class=""content"">
+      <div class=""content-section active"" id=""cat1"">
+        <div class=""menu-item"" data-ar=""Ramen.png""><div class=""menu-thumb""><img src=""Ramen1.png"" alt=""ラ""></div><div id=""c1-0"">ラーメン</div></div>
+        <div class=""menu-item"" data-ar=""Fried rice.png""><div class=""menu-thumb""><img src=""Fried rice1.png"" alt=""チ""></div><div id=""c1-1"">チャーハン</div></div>
+        <div class=""menu-item"" data-ar=""Shanghai fried noodles.png""><div class=""menu-thumb""><img src=""Shanghai fried noodles1.png"" alt=""上""></div><div id=""c1-2"">上海焼きそば</div></div>
       </div>
-
-      <!-- 焼き・揚げもの -->
-      <div class="content-section" id="cat2">
-        <div class="menu-item" data-ar="Gyoza.png">
-          <div class="menu-thumb">
-            <img src="Gyoza1.png" alt="餃子">
-          </div>
-          <div id="c2-0">餃子</div>
-        </div>
-        <div class="menu-item" data-ar="Twice-cooked pork.png">
-          <div class="menu-thumb">
-            <img src="Twice-cooked pork1.png" alt="ホイコーロー">
-          </div>
-          <div id="c2-1">ホイコーロー</div>
-        </div>
-        <div class="menu-item" data-ar="Shrimp in chili sauce.png">
-          <div class="menu-thumb">
-            <img src="Shrimp in chili sauce1.png" alt="エビチリ">
-          </div>
-          <div id="c2-2">エビチリ</div>
-        </div>
+      <div class=""content-section"" id=""cat2"">
+        <div class=""menu-item"" data-ar=""Gyoza.png""><div class=""menu-thumb""><img src=""Gyoza1.png"" alt=""餃""></div><div id=""c2-0"">餃子</div></div>
+        <div class=""menu-item"" data-ar=""Twice-cooked pork.png""><div class=""menu-thumb""><img src=""Twice-cooked pork1.png"" alt=""ホ""></div><div id=""c2-1"">ホイコーロー</div></div>
+        <div class=""menu-item"" data-ar=""Shrimp in chili sauce.png""><div class=""menu-thumb""><img src=""Shrimp in chili sauce1.png"" alt=""エ""></div><div id=""c2-2"">エビチリ</div></div>
       </div>
-
-      <!-- 鍋・汁物 -->
-      <div class="content-section" id="cat3">
-        <div class="menu-item" data-ar="Hot pot.png">
-          <div class="menu-thumb">
-            <img src="Hot pot1.png" alt="火鍋">
-          </div>
-          <div id="c3-0">火鍋</div>
-        </div>
-        <div class="menu-item" data-ar="Egg soup.png">
-          <div class="menu-thumb">
-            <img src="Egg soup1.png" alt="卵スープ">
-          </div>
-          <div id="c3-1">卵スープ</div>
-        </div>
-        <div class="menu-item" data-ar="Shark fin soup.png">
-          <div class="menu-thumb">
-            <img src="Shark fin soup1.png" alt="フカヒレスープ">
-          </div>
-          <div id="c3-2">フカヒレスープ</div>
-        </div>
+      <div class=""content-section"" id=""cat3"">
+        <div class=""menu-item"" data-ar=""Hot pot.png""><div class=""menu-thumb""><img src=""Hot pot1.png"" alt=""火""></div><div id=""c3-0"">火鍋</div></div>
+        <div class=""menu-item"" data-ar=""Egg soup.png""><div class=""menu-thumb""><img src=""Egg soup1.png"" alt=""卵""></div><div id=""c3-1"">卵スープ</div></div>
+        <div class=""menu-item"" data-ar=""Shark fin soup.png""><div class=""menu-thumb""><img src=""Shark fin soup1.png"" alt=""フ""></div><div id=""c3-2"">フカヒレスープ</div></div>
       </div>
-
-      <!-- デザート -->
-      <div class="content-section" id="cat4">
-        <div class="menu-item" data-ar="Almond jelly.png">
-          <div class="menu-thumb">
-            <img src="Almond jelly1.png" alt="杏仁豆腐">
-          </div>
-          <div id="c4-0">杏仁豆腐</div>
-        </div>
-        <div class="menu-item" data-ar="Mango pudding.png">
-          <div class="menu-thumb">
-            <img src="Mango pudding1.png" alt="マンゴープリン">
-          </div>
-          <div id="c4-1">マンゴープリン</div>
-        </div>
-        <div class="menu-item" data-ar="Sesame balls.png">
-          <div class="menu-thumb">
-            <img src="Sesame balls1.png" alt="ゴマ団子">
-          </div>
-          <div id="c4-2">ゴマ団子</div>
-        </div>
+      <div class=""content-section"" id=""cat4"">
+        <div class=""menu-item"" data-ar=""Almond jelly.png""><div class=""menu-thumb""><img src=""Almond jelly1.png"" alt=""杏""></div><div id=""c4-0"">杏仁豆腐</div></div>
+        <div class=""menu-item"" data-ar=""Mango pudding.png""><div class=""menu-thumb""><img src=""Mango pudding1.png"" alt=""マ""></div><div id=""c4-1"">マンゴープリン</div></div>
+        <div class=""menu-item"" data-ar=""Sesame balls.png""><div class=""menu-thumb""><img src=""Sesame balls1.png"" alt=""ゴ""></div><div id=""c4-2"">ゴマ団子</div></div>
       </div>
-
-      <!-- 飲み物 -->
-      <div class="content-section" id="cat5">
-        <div class="menu-item" data-ar="Oolong tea.png">
-          <div class="menu-thumb">
-            <img src="Oolong tea1.png" alt="ウーロン茶">
-          </div>
-          <div id="c5-0">ウーロン茶</div>
-        </div>
-        <div class="menu-item" data-ar="Jasmine tea.png">
-          <div class="menu-thumb">
-            <img src="Jasmine tea1.png" alt="ジャスミン茶">
-          </div>
-          <div id="c5-1">ジャスミン茶</div>
-        </div>
-        <div class="menu-item" data-ar="Green tea.png">
-          <div class="menu-thumb">
-            <img src="Green tea1.png" alt="緑茶">
-          </div>
-          <div id="c5-2">緑茶</div>
-        </div>
+      <div class=""content-section"" id=""cat5"">
+        <div class=""menu-item"" data-ar=""Oolong tea.png""><div class=""menu-thumb""><img src=""Oolong tea1.png"" alt=""ウ""></div><div id=""c5-0"">ウーロン茶</div></div>
+        <div class=""menu-item"" data-ar=""Jasmine tea.png""><div class=""menu-thumb""><img src=""Jasmine tea1.png"" alt=""ジ""></div><div id=""c5-1"">ジャスミン茶</div></div>
+        <div class=""menu-item"" data-ar=""Green tea.png""><div class=""menu-thumb""><img src=""Green tea1.png"" alt=""緑""></div><div id=""c5-2"">緑茶</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ===== AR画面 ===== -->
-  <div id="arScreen" class="ar-screen hidden">
-    <!-- ここに選択されたメニューの画像が入る -->
-    <img id="arImage" src="" alt="AR表示" class="ar-bg-img">
-
-    <div class="ar-controls">
-      <button class="back-btn" id="backButton">← <span id="backLabel">戻る</span></button>
-      <button class="option-btn" id="optionButton">
-        <span class="gear">⚙️</span>
-        <span id="optionLabel">オプション</span>
-      </button>
-
-      <div class="size-menu" id="sizeMenu">
-        <div class="size-item selected" id="size-large">大</div>
-        <div class="size-item" id="size-medium">中</div>
-        <div class="size-item" id="size-small">小</div>
+  <div id=""arScreen"" class=""ar-screen hidden"">
+    <img id=""arImage"" src="""" alt=""AR"" class=""ar-bg-img"">
+    <div class=""ar-controls"">
+      <button class=""back-btn"" id=""backButton"">← <span id=""backLabel"">戻る</span></button>
+      <button class=""option-btn"" id=""optionButton""><span class=""gear"">⚙️</span> <span id=""optionLabel"">オプション</span></button>
+      <div class=""size-menu"" id=""sizeMenu"">
+        <div class=""size-item selected"" id=""size-large"">大</div>
+        <div class=""size-item"" id=""size-medium"">中</div>
+        <div class=""size-item"" id=""size-small"">小</div>
       </div>
     </div>
   </div>
 
   <script>
-    /* ==== 多言語データ ==== */
-    const translations = {
-      ja: {
-        title: "メニュー",
-        arTitle: "AR表示",
-        tabs: ["麺・ごはん", "焼き・揚げもの", "鍋・汁物", "デザート", "飲み物"],
-        cat1: ["ラーメン", "チャーハン", "上海焼きそば"],
-        cat2: ["餃子", "ホイコーロー", "エビチリ"],
-        cat3: ["火鍋", "卵スープ", "フカヒレスープ"],
-        cat4: ["杏仁豆腐", "マンゴープリン", "ゴマ団子"],
-        cat5: ["ウーロン茶", "ジャスミン茶", "緑茶"],
-        back: "戻る",
-        option: "オプション",
-        sizes: ["大", "中", "小"]
-      },
-      en: {
-        title: "Menu",
-        arTitle: "AR View",
-        tabs: ["Noodles & Rice", "Grilled / Fried", "Hot Pot & Soup", "Dessert", "Drinks"],
-        cat1: ["Ramen", "Fried rice", "Shanghai fried noodles"],
-        cat2: ["Gyoza", "Twice-cooked pork", "Shrimp in chili sauce"],
-        cat3: ["Hot pot", "Egg soup", "Shark fin soup"],
-        cat4: ["Almond jelly", "Mango pudding", "Sesame balls"],
-        cat5: ["Oolong tea", "Jasmine tea", "Green tea"],
-        back: "Back",
-        option: "Options",
-        sizes: ["Large", "Medium", "Small"]
-      },
-      ko: {
-        title: "메뉴",
-        arTitle: "AR 보기",
-        tabs: ["면·밥", "구이·튀김", "전골·국물", "디저트", "음료"],
-        cat1: ["라면", "볶음밥", "상하이 볶음면"],
-        cat2: ["교자", "회과육", "칠리 새우"],
-        cat3: ["훠궈", "계란 수프", "상어 지느러미 수프"],
-        cat4: ["안닌두부", "망고 푸딩", "참깨 경단"],
-        cat5: ["우롱차", "자스민 차", "녹차"],
-        back: "뒤로",
-        option: "옵션",
-        sizes: ["대", "중", "소"]
-      },
-      zh: {
-        title: "菜单",
-        arTitle: "AR显示",
-        tabs: ["面·饭", "烧烤·油炸", "火锅·汤类", "甜点", "饮料"],
-        cat1: ["拉面", "炒饭", "上海炒面"],
-        cat2: ["饺子", "回锅肉", "辣椒虾"],
-        cat3: ["火锅", "鸡蛋汤", "鱼翅汤"],
-        cat4: ["杏仁豆腐", "芒果布丁", "芝麻球"],
-        cat5: ["乌龙茶", "茉莉花茶", "绿茶"],
-        back: "返回",
-        option: "选项",
-        sizes: ["大", "中", "小"]
-      },
-      fr: {
-        title: "Menu",
-        arTitle: "Affichage AR",
-        tabs: ["Nouilles & Riz", "Grillé / Frit", "Fondue & Soupe", "Dessert", "Boissons"],
-        cat1: ["Ramen", "Riz sauté", "Nouilles sautées de Shanghai"],
-        cat2: ["Gyoza", "Porc aux deux cuissons", "Crevettes au piment"],
-        cat3: ["Fondue chinoise", "Soupe aux œufs", "Soupe aux ailerons de requin"],
-        cat4: ["Tofu aux amandes", "Flan à la mangue", "Boules au sésame"],
-        cat5: ["Thé oolong", "Thé au jasmin", "Thé vert"],
-        back: "Retour",
-        option: "Options",
-        sizes: ["Grand", "Moyen", "Petit"]
-      },
-      es: {
-        title: "Menú",
-        arTitle: "Vista AR",
-        tabs: ["Fideos y Arroz", "A la parrilla / Frito", "Olla caliente y Sopa", "Postre", "Bebidas"],
-        cat1: ["Ramen", "Arroz frito", "Fideos fritos de Shanghái"],
-        cat2: ["Gyoza", "Cerdo dos veces cocinado", "Camarones al chile"],
-        cat3: ["Hot pot", "Sopa de huevo", "Sopa de aleta de tiburón"],
-        cat4: ["Flan de almendra", "Pudín de mango", "Bolas de sésamo"],
-        cat5: ["Té oolong", "Té de jazmín", "Té verde"],
-        back: "Atrás",
-        option: "Opciones",
-        sizes: ["Grande", "Mediano", "Pequeño"]
-      },
-      de: {
-        title: "Menü",
-        arTitle: "AR-Ansicht",
-        tabs: ["Nudeln & Reis", "Gegrillt / Frittiert", "Hotpot & Suppe", "Dessert", "Getränke"],
-        cat1: ["Ramen", "Gebratener Reis", "Shanghai-Bratnudeln"],
-        cat2: ["Gyoza", "Doppelt gegarter Schweinebauch", "Garnelen in Chilisauce"],
-        cat3: ["Hotpot", "Eiersuppe", "Haifischflossensuppe"],
-        cat4: ["Mandelpudding", "Mango-Pudding", "Sesambällchen"],
-        cat5: ["Oolong-Tee", "Jasmintee", "Grüner Tee"],
-        back: "Zurück",
-        option: "Optionen",
-        sizes: ["Groß", "Mittel", "Klein"]
-      },
-      it: {
-        title: "Menù",
-        arTitle: "Vista AR",
-        tabs: ["Noodles e Riso", "Grigliato / Fritto", "Fonduta & Zuppe", "Dessert", "Bevande"],
-        cat1: ["Ramen", "Riso fritto", "Spaghetti saltati di Shanghai"],
-        cat2: ["Gyoza", "Maiale alla doppia cottura", "Gamberi al chili"],
-        cat3: ["Hot pot", "Zuppa d'uovo", "Zuppa di pinna di squalo"],
-        cat4: ["Budino di mandorla", "Budino al mango", "Palline di sesamo"],
-        cat5: ["Tè oolong", "Tè al gelsomino", "Tè verde"],
-        back: "Indietro",
-        option: "Opzioni",
-        sizes: ["Grande", "Medio", "Piccolo"]
-      }
+    /* IE11互換のため var と function を使用し、ES6機能を排除したコード */
+    var translations = {
+      ja: { title: ""メニュー"", arTitle: ""AR表示"", tabs: [""麺・ごはん"", ""焼き・揚げもの"", ""鍋・汁物"", ""デザート"", ""飲み物""], cat1: [""ラーメン"", ""チャーハン"", ""上海焼きそば""], cat2: [""餃子"", ""ホイコーロー"", ""エビチリ""], cat3: [""火鍋"", ""卵スープ"", ""フカヒレスープ""], cat4: [""杏仁豆腐"", ""マンゴープリン"", ""ゴマ団子""], cat5: [""ウーロン茶"", ""ジャスミン茶"", ""緑茶""], back: ""戻る"", option: ""オプション"", sizes: [""大"", ""中"", ""小""] },
+      en: { title: ""Menu"", arTitle: ""AR View"", tabs: [""Noodles & Rice"", ""Grilled / Fried"", ""Hot Pot & Soup"", ""Dessert"", ""Drinks""], cat1: [""Ramen"", ""Fried rice"", ""Shanghai fried noodles""], cat2: [""Gyoza"", ""Twice-cooked pork"", ""Shrimp in chili sauce""], cat3: [""Hot pot"", ""Egg soup"", ""Shark fin soup""], cat4: [""Almond jelly"", ""Mango pudding"", ""Sesame balls""], cat5: [""Oolong tea"", ""Jasmine tea"", ""Green tea""], back: ""Back"", option: ""Options"", sizes: [""Large"", ""Medium"", ""Small""] },
+      ko: { title: ""메뉴"", arTitle: ""AR 보기"", tabs: [""면·밥"", ""구이·튀김"", ""전골·국물"", ""디저트"", ""음료""], cat1: [""라면"", ""볶음밥"", ""상하이 볶음면""], cat2: [""교자"", ""회과육"", ""칠리 새우""], cat3: [""훠궈"", ""계란 수프"", ""상어 지느러미 수프""], cat4: [""안닌두부"", ""망고 푸딩"", ""참깨 경단""], cat5: [""우롱차"", ""자스민 차"", ""녹차""], back: ""뒤로"", option: ""옵션"", sizes: [""대"", ""중"", ""소""] },
+      zh: { title: ""菜单"", arTitle: ""AR显示"", tabs: [""面·饭"", ""烧烤·油炸"", ""火锅·汤类"", ""甜点"", ""饮料""], cat1: [""拉面"", ""炒饭"", ""上海炒面""], cat2: [""饺子"", ""回锅肉"", ""辣椒虾""], cat3: [""火锅"", ""鸡蛋汤"", ""鱼翅汤""], cat4: [""杏仁豆腐"", ""芒果布丁"", ""芝麻球""], cat5: [""乌龙茶"", ""茉莉花茶"", ""绿茶""], back: ""返回"", option: ""选项"", sizes: [""大"", ""中"", ""小""] },
+      fr: { title: ""Menu"", arTitle: ""Affichage AR"", tabs: [""Nouilles & Riz"", ""Grillé / Frit"", ""Fondue & Soupe"", ""Dessert"", ""Boissons""], cat1: [""Ramen"", ""Riz sauté"", ""Nouilles sautées de Shanghai""], cat2: [""Gyoza"", ""Porc aux deux cuissons"", ""Crevettes au piment""], cat3: [""Fondue chinoise"", ""Soupe aux œufs"", ""Soupe aux ailerons de requin""], cat4: [""Tofu aux amandes"", ""Flan à la mangue"", ""Boules au sésame""], cat5: [""Thé oolong"", ""Thé au jasmin"", ""Thé vert""], back: ""Retour"", option: ""Options"", sizes: [""Grand"", ""Moyen"", ""Petit""] },
+      es: { title: ""Menú"", arTitle: ""Vista AR"", tabs: [""Fideos y Arroz"", ""A la parrilla / Frito"", ""Olla caliente y Sopa"", ""Postre"", ""Bebidas""], cat1: [""Ramen"", ""Arroz frito"", ""Fideos fritos de Shanghái""], cat2: [""Gyoza"", ""Cerdo dos veces cocinado"", ""Camarones al chile""], cat3: [""Hot pot"", ""Sopa de huevo"", ""Sopa de aleta de tiburón""], cat4: [""Flan de almendra"", ""Pudín de mango"", ""Bolas de sésamo""], cat5: [""Té oolong"", ""Té de jazmín"", ""Té verde""], back: ""Atrás"", option: ""Opciones"", sizes: [""Grande"", ""Mediano"", ""Pequeño""] },
+      de: { title: ""Menü"", arTitle: ""AR-Ansicht"", tabs: [""Nudeln & Reis"", ""Gegrillt / Frittiert"", ""Hotpot & Suppe"", ""Dessert"", ""Getränke""], cat1: [""Ramen"", ""Gebratener Reis"", ""Shanghai-Bratnudeln""], cat2: [""Gyoza"", ""Doppelt gegarter Schweinebauch"", ""Garnelen in Chilisauce""], cat3: [""Hotpot"", ""Eiersuppe"", ""Haifischflossensuppe""], cat4: [""Mandelpudding"", ""Mango-Pudding"", ""Sesambällchen""], cat5: [""Oolong-Tee"", ""Jasmintee"", ""Grüner Tee""], back: ""Zurück"", option: ""Optionen"", sizes: [""Groß"", ""Mittel"", ""Klein""] },
+      it: { title: ""Menù"", arTitle: ""Vista AR"", tabs: [""Noodles e Riso"", ""Grigliato / Fritto"", ""Fonduta & Zuppe"", ""Dessert"", ""Bevande""], cat1: [""Ramen"", ""Riso fritto"", ""Spaghetti saltati di Shanghai""], cat2: [""Gyoza"", ""Maiale alla doppia cottura"", ""Gamberi al chili""], cat3: [""Hot pot"", ""Zuppa d'uovo"", ""Zuppa di pinna di squalo""], cat4: [""Budino di mandorla"", ""Budino al mango"", ""Palline di sesamo""], cat5: [""Tè oolong"", ""Tè al gelsomino"", ""Tè verde""], back: ""Indietro"", option: ""Opzioni"", sizes: [""Grande"", ""Medio"", ""Piccolo""] }
     };
 
-    let currentLang = "ja";
-    let isARMode = false;
-    const titleEl = document.getElementById("title");
+    var currentLang = ""ja"";
+    var isARMode = false;
+    var titleEl = document.getElementById(""title"");
 
     function applyLanguage(lang) {
-      const t = translations[lang];
+      var t = translations[lang];
       if (!t) return;
-
       titleEl.textContent = isARMode ? t.arTitle : t.title;
 
-      const tabIds = ["tab1", "tab2", "tab3", "tab4", "tab5"];
-      t.tabs.forEach((name, i) => {
-        document.getElementById(tabIds[i]).textContent = name;
-      });
+      var tabIds = [""tab1"", ""tab2"", ""tab3"", ""tab4"", ""tab5""];
+      for(var i=0; i<tabIds.length; i++) {
+        document.getElementById(tabIds[i]).textContent = t.tabs[i];
+      }
+      
+      var cats = [""c1"", ""c2"", ""c3"", ""c4"", ""c5""];
+      for(var i=0; i<cats.length; i++) {
+        var items = t[""cat"" + (i + 1)];
+        for(var j=0; j<items.length; j++) {
+           var el = document.getElementById(cats[i] + ""-"" + j);
+           if(el) el.textContent = items[j];
+        }
+      }
 
-      const cats = ["c1", "c2", "c3", "c4", "c5"];
-      cats.forEach((prefix, i) => {
-        t["cat" + (i + 1)].forEach((item, j) => {
-          document.getElementById(`${prefix}-${j}`).textContent = item;
-        });
-      });
-
-      document.getElementById("backLabel").textContent   = t.back;
-      document.getElementById("optionLabel").textContent = t.option;
-      document.getElementById("size-large").textContent  = t.sizes[0];
-      document.getElementById("size-medium").textContent = t.sizes[1];
-      document.getElementById("size-small").textContent  = t.sizes[2];
+      document.getElementById(""backLabel"").textContent = t.back;
+      document.getElementById(""optionLabel"").textContent = t.option;
+      document.getElementById(""size-large"").textContent = t.sizes[0];
+      document.getElementById(""size-medium"").textContent = t.sizes[1];
+      document.getElementById(""size-small"").textContent = t.sizes[2];
     }
 
     /* タブ切り替え */
-    const tabsNode = document.querySelectorAll('.tab');
-    const sections = document.querySelectorAll('.content-section');
-
-    tabsNode.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const id = tab.dataset.target;
-        tabsNode.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        sections.forEach(sec => {
-          sec.classList.toggle('active', sec.id === id);
+    var tabsNode = document.querySelectorAll('.tab');
+    var sections = document.querySelectorAll('.content-section');
+    for (var i = 0; i < tabsNode.length; i++) {
+      (function(idx) {
+        tabsNode[idx].addEventListener('click', function() {
+           var id = tabsNode[idx].getAttribute('data-target');
+           for(var k=0; k<tabsNode.length; k++) tabsNode[k].classList.remove('active');
+           tabsNode[idx].classList.add('active');
+           for(var k=0; k<sections.length; k++) {
+             if(sections[k].id === id) sections[k].classList.add('active');
+             else sections[k].classList.remove('active');
+           }
         });
-      });
-    });
+      })(i);
+    }
 
     /* 言語メニュー */
-    const langButton  = document.getElementById("langButton");
-    const langMenu    = document.getElementById("languageMenu");
-    const optionButton = document.getElementById("optionButton");
-    const sizeMenu    = document.getElementById("sizeMenu");
+    var langButton = document.getElementById(""langButton"");
+    var langMenu = document.getElementById(""languageMenu"");
+    var optionButton = document.getElementById(""optionButton"");
+    var sizeMenu = document.getElementById(""sizeMenu"");
 
-    langButton.addEventListener('click', (e) => {
+    langButton.addEventListener('click', function(e) {
       e.stopPropagation();
-      langMenu.classList.toggle("open");
+      langMenu.classList.toggle(""open"");
     });
 
-    document.addEventListener("click", (e) => {
+    document.addEventListener(""click"", function(e) {
       if (!langMenu.contains(e.target) && !langButton.contains(e.target)) {
-        langMenu.classList.remove("open");
+        langMenu.classList.remove(""open"");
       }
       if (!sizeMenu.contains(e.target) && !optionButton.contains(e.target)) {
-        sizeMenu.classList.remove("open");
+        sizeMenu.classList.remove(""open"");
       }
     });
 
-    langMenu.querySelectorAll("li").forEach(li => {
-      li.addEventListener("click", () => {
-        langMenu.querySelectorAll("li").forEach(item => item.classList.remove("selected"));
-        li.classList.add("selected");
-        currentLang = li.dataset.lang;
-        applyLanguage(currentLang);
-        langMenu.classList.remove("open");
-      });
-    });
+    var langItems = langMenu.querySelectorAll(""li"");
+    for(var i=0; i<langItems.length; i++) {
+      (function(li) {
+        li.addEventListener(""click"", function() {
+          for(var k=0; k<langItems.length; k++) langItems[k].classList.remove(""selected"");
+          li.classList.add(""selected"");
+          currentLang = li.getAttribute('data-lang');
+          applyLanguage(currentLang);
+          langMenu.classList.remove(""open"");
+        });
+      })(langItems[i]);
+    }
 
     /* メニュー → AR画面共通処理 */
-    const menuScreen = document.getElementById("menuScreen");
-    const arScreen   = document.getElementById("arScreen");
-    const backButton = document.getElementById("backButton");
-    const arImage    = document.getElementById("arImage");
+    var menuScreen = document.getElementById(""menuScreen"");
+    var arScreen = document.getElementById(""arScreen"");
+    var backButton = document.getElementById(""backButton"");
+    var arImage = document.getElementById(""arImage"");
 
     function showARScreen() {
       isARMode = true;
-      menuScreen.classList.add("hidden");
-      arScreen.classList.remove("hidden");
+      menuScreen.classList.add(""hidden"");
+      arScreen.classList.remove(""hidden"");
       applyLanguage(currentLang);
     }
     function showMenuScreen() {
       isARMode = false;
-      arScreen.classList.add("hidden");
-      menuScreen.classList.remove("hidden");
+      arScreen.classList.add(""hidden"");
+      menuScreen.classList.remove(""hidden"");
       applyLanguage(currentLang);
     }
 
-    // すべてのメニューアイテムに AR表示を紐づけ
-    document.querySelectorAll(".menu-item").forEach(item => {
-      item.addEventListener("click", () => {
-        const imgFile = item.dataset.ar;
-        if (imgFile) {
-          arImage.src = imgFile;
-          showARScreen();
-        }
-      });
-    });
+    var menuItems = document.querySelectorAll("".menu-item"");
+    for(var i=0; i<menuItems.length; i++) {
+      (function(item) {
+        item.addEventListener(""click"", function() {
+          var imgFile = item.getAttribute('data-ar');
+          if (imgFile) {
+            // 画像はローカルパスにあると仮定。本来は絶対パス等が安全
+            arImage.src = imgFile; 
+            showARScreen();
+          }
+        });
+      })(menuItems[i]);
+    }
 
-    backButton.addEventListener("click", showMenuScreen);
+    backButton.addEventListener(""click"", showMenuScreen);
 
-    /* オプション → サイズメニュー */
-    const sizeItems = document.querySelectorAll(".size-item");
-
-    optionButton.addEventListener("click", (e) => {
+    /* オプション */
+    var sizeItems = document.querySelectorAll("".size-item"");
+    optionButton.addEventListener(""click"", function(e) {
       e.stopPropagation();
-      sizeMenu.classList.toggle("open");
+      sizeMenu.classList.toggle(""open"");
     });
+    for(var i=0; i<sizeItems.length; i++) {
+       (function(item) {
+         item.addEventListener(""click"", function() {
+           for(var k=0; k<sizeItems.length; k++) sizeItems[k].classList.remove(""selected"");
+           item.classList.add(""selected"");
+         });
+       })(sizeItems[i]);
+    }
 
-    sizeItems.forEach(item => {
-      item.addEventListener("click", () => {
-        sizeItems.forEach(i => i.classList.remove("selected"));
-        item.classList.add("selected");
-        // ここに実際の「大・中・小」の処理を入れる想定
-      });
-    });
-
-    /* 初期言語適用 */
     applyLanguage(currentLang);
   </script>
-
 </body>
-</html>
-
+</html>"
